@@ -1,0 +1,11 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model MeetingRoomCalendar.AppSettings
+@{
+    ViewData["Title"] = "Meeting Room Calendars";
+}
+<div class="jumbotron">
+    @foreach (var mb in Model.MeetingRoomMailboxes)
+    { <a class="btn btn-primary btn-lg" href="calendar/@mb" role="button">@mb</a>}
+</div>

@@ -1,0 +1,10 @@
+﻿.hidden {
+    display: none !important;
+}
+.container-fluid {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+form.form-inline > * {
+    margin-right: 5px;
+}
