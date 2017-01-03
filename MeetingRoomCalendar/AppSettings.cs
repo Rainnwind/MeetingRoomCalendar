@@ -9,5 +9,8 @@ namespace MeetingRoomCalendar
     {
         public string MailDomain { get; set; }
         public string[] MeetingRoomMailboxes { get; set; }
+        public string[] DeleteEnabledCategories { get; set; }
+        public string[] CreateEnabledCategories { get; set; }
+        public string[] ModifyEnabledCategories { get; set; }
     }
 }

@@ -5,7 +5,11 @@
 @{
     ViewData["Title"] = "Meeting Room Calendars";
 }
-<div class="jumbotron">
+@section header {
+    <div class="container-fluid"><h1 class="title">@ViewData["Title"]</h1></div>
+}
+
+<div class="container">
     @foreach (var mb in Model.MeetingRoomMailboxes)
     { <a class="btn btn-primary btn-lg" href="calendar/@mb" role="button">@mb</a>}
 </div>

@@ -11,221 +11,55 @@
 {
     <script>
         var calendarMailbox = "@ViewData["MailBox"]";
-        var curCal = null;
-        var foundActive = false;
-        loadCalendar();
-        setInterval(loadCalendar, 60000);
-
-        function getDateFormatted(date) {
-            return date.toISOString().slice(0, 10);
-        }
-
-        function getTimeFormatted(date, includeSeconds) {
-            includeSeconds = typeof includeSeconds !== 'undefined' ? includeSeconds : false;
-            if (includeSeconds) {
-                return date.toTimeString().slice(0, 8);
-            }
-            else {
-                return date.toTimeString().slice(0, 5);
-            }
-        }
-
-        function getDateTimeFormatted(date, includeSeconds) {
-            return getDateFormatted(date) + " " + getTimeFormatted(date, includeSeconds);
-        }
-
-        function displayCalendar(cal) {
-            $("title").text(cal.owner.name);
-            $("h1.title").text(cal.owner.name);
-            tbody = $("table#calendar > tbody").empty();
-            var from = new Date(cal.from);
-            var to = new Date(cal.to);
-            foundActive = false;
-            $.each(cal.appointments, function (i, a) {
-                var start = new Date(a.start);
-                var end = new Date(a.end);
-                if (start < to && from < end) {
-                    var active = (start < Date.now() && Date.now() < end && a.isBusy);
-                    if (start < from) {
-                        start = from;
-                    }
-                    if (end >= to) {
-                        end = to;
-                    }
-                    var tr = $("<tr/>");
-                    if (a.isAllDayEvent) {
-                        tr.append($("<td colspan='2' class='text-center'/>").text("Hele dagen"));
-                    }
-                    else {
-                        tr
-                            .append($("<td class='date'/>").text(getTimeFormatted(start)))
-                            .append($("<td class='date'/>").text(getTimeFormatted(end)));
-                    }
-                    var deleteButton = $("<button id='" + a.uniqueIdHash + "' type='button' class='btn btn-sm' onclick='deleteMeeting(\"" + a.uniqueId + "\", \"" + a.uniqueIdHash + "\")'/>")
-                        .text("Slet")
-                    if ($.inArray("ADHOC", a.categories) === -1) {
-                        deleteButton.attr("disabled", "disabled");
-                    }
-                    tr
-                        .append($("<td/>").text(a.subject))
-                        .append($("<td/>").text(a.organizer.name))
-                        .append($("<td/>").append(deleteButton));
-                    if (active) {
-                        tr.addClass("table-active");
-                        foundActive = true;
-                    }
-                    tbody.append(tr);
-                }
-            });
-            if (cal.appointments.length === 0) {
-                tbody.append($("<tr><td colspan='4'>Ingen begivenheder</td></th>"));
-            }
-            if (foundActive) {
-                $("table#calendar").addClass("table-danger")
-            }
-            else {
-                $("table#calendar").removeClass("table-danger")
-            }
-        }
-
-        function displayFailure(jqXHR) {
-            $("#update_status").text("Opdatering fejlede " + getDateTimeFormatted(new Date(), true)).append($("<br/>"));
-            if (jqXHR.status === 0) {
-                $("#update_status").append("Intet svar");
-            }
-            else {
-                $("#update_status").append("Status " + jqXHR.status + " " + jqXHR.statusText);
-                if (jqXHR.responseText) {
-                    $("#update_status").append($("<br/>")).append(jqXHR.responseText);
-                }
-            }
-            $("#update_status").addClass("alert-danger");
-        }
-
-        function loadCalendar() {
-            $("#reload_button").attr("disabled", "disabled");
-            $("#update_status").text("Opdaterer ...")
-            $("#update_status").removeClass("alert-danger");
-            $()
-            $.getJSON("/api/calendar/" + calendarMailbox).done(function (cal) {
-                displayCalendar(cal);
-                $("#update_status").empty();
-                $("#latest_update").text("Seneste opdatering " + getDateTimeFormatted(new Date(), true));
-                if (cal.canCreate && (!foundActive)) {
-                    showNewMeetingForm();
-                }
-                else {
-                    hideNewMeetingForm();
-                }
-                curCal = cal;
-            }).fail(displayFailure).always(function () { $("#reload_button").removeAttr("disabled"); });
-        }
-
-        function enableNewMeetingForm()
-        {
-            $("#new_meeting_duration, #new_meeting_create").removeAttr("disabled");
-        }
-
-        function disableNewMeetingForm()
-        {
-            $("#new_meeting_duration, #new_meeting_create").attr("disabled", "disabled");
-        }
-
-        function hideNewMeetingForm()
-        {
-            $("#new_meeting").addClass("hidden");
-            disableNewMeetingForm();
-        }
-
-        function showNewMeetingForm()
-        {
-            $("#new_meeting").removeClass("hidden");
-            enableNewMeetingForm();
-        }
-
-        function createNewMeeting() {
-            $("#new_meeting_status").text("Tilføjer ad-hoc møde");
-            $("#new_meeting_status").removeClass("alert-danger");
-            disableNewMeetingForm(false);
-            var start = new Date();
-            start.setMinutes(parseInt(start.getMinutes() / 15) * 15);
-            start.setSeconds(0);
-            start.setMilliseconds(0);
-            newAppointment = {
-                start: start,
-                end: new Date(start.getTime() + $("#new_meeting_duration").val() * 60000),
-                subject: "Ad-hoc møde",
-                isBusy: true,
-                isAllDayEvent: false,
-                organizer: curCal.owner,
-                categories: ["ADHOC"]
-            }
-            $.ajax({
-                method: "POST",
-                url: "/api/calendar/" + calendarMailbox + "/appointment",
-                data: JSON.stringify(newAppointment),
-                contentType: "application/json; charset=UTF-8"
-            }).done(function () {
-                loadCalendar();
-            }).fail(function (jqXHR) {
-                $("#new_meeting_status").text("Status " + jqXHR.status + " " + jqXHR.statusText);
-                if (jqXHR.responseText) {
-                    $("#new_meeting_status").append($("<br/>")).append(jqXHR.responseText);
-                }
-                $("#new_meeting_status").addClass("alert-danger");
-            });
-        }
-
-        function deleteMeeting(uniqueId, buttonId) {
-            var button = $("#" + buttonId);
-            button.attr("disabled", "disabled");
-            $.ajax({
-                method: "DELETE",
-                url: "/api/calendar/" + calendarMailbox + "/appointment",
-                data: JSON.stringify(uniqueId),
-                dataType: "json",
-                contentType: "application/json; charset=UTF-8"
-            }).done(function() {
-                loadCalendar();
-            }).fail(function (jqXHR) {
-                button.after($("<p class='alert-danger'/>").text("Could not delete: " + jqXHR.status));
-            });
-        }
-
-
     </script>    
+    <script src="~/Calendar.js"></script>
+}
+@section header {
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-8 text-left"><h1 class="title">@ViewData["Title"]</h1></div>
+            <div class="col-4 text-right"><p id="time" class="h1 time"></p></div>
+        </div>
+    </div>
 }
 @section footer {
-    <footer class="container-fluid align-bottom">
-        <div class="row">
-            <div id="latest_update" class="col-6 text-left"></div>
-            <div id="update_status" class="col-6 text-right">Opdaterer ...</div>
+    <footer>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-6 text-left">
+                    <form id="new_meeting" class="form-inline hidden">
+                        <label for="duration" class="sr-only">Varighed </label>
+                        <select id="new_meeting_duration" class="form-control" disabled="disabled">
+                            <option value="30">30 minutter</option>
+                            <option value="60" selected="selected">1 time</option>
+                            <option value="90">1,5 time</option>
+                            <option value="120">2 timer</option>
+                        </select>
+                        <button id="new_meeting_create" type="button" class="btn btn-primary" onclick="createNewMeeting()" disabled="disabled">Opret ad-hoc møde</button>
+                        <span id="new_meeting_status"></span>
+                    </form>
+                </div>
+                <div class="col-6 text-right">
+                    <button id="reload_button" type="button" class="btn" onclick="loadCalendar()">Opdater</button>
+                </div>
+            </div>
+            <div class="row">
+                <div id="latest_update" class="col-6 text-left"></div>
+                <div id="update_status" class="col-6 text-right">Opdaterer ...</div>
+            </div>
         </div>
     </footer>
 }
     <div class="container-fluid">
         <table id="calendar" class="table table-bordered">
-            <thead><tr><th>Start</th><th>Slut</th><th>Emne</th><th>Arrangør</th><th>D</th></tr></thead>
+            <colgroup>
+                <col style="width: 10%;" />
+                <col style="width: 10%;" />
+                <col style="width: 50%;" />
+                <col style="width: 20%;" />
+                <col style="width: 10%;" />
+            </colgroup>
+            <thead><tr><th>Start</th><th>Slut</th><th>Emne</th><th colspan="2">Arrangør</th></tr></thead>
             <tbody><tr><td colspan="5">Kalender ikke indlæst</td></tr></tbody>
         </table>
-    </div>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-6 text-left">
-                <form id="new_meeting" class="form-inline hidden">
-                    <label for="duration" class="sr-only">Varighed </label>
-                    <select id="new_meeting_duration" class="form-control" disabled="disabled">
-                        <option value="30">30 minutter</option>
-                        <option value="60" selected="selected">1 time</option>
-                        <option value="90">1,5 time</option>
-                        <option value="120">2 timer</option>
-                    </select>
-                    <button id="new_meeting_create" type="button" class="btn btn-primary" onclick="createNewMeeting()" disabled="disabled">Opret ad-hoc møde</button>
-                    <span id="new_meeting_status"></span>
-                </form>
-            </div>
-            <div class="col-6 text-right">
-                <button id="reload_button" type="button" class="btn" onclick="loadCalendar()">Opdater</button>
-            </div>
-        </div>
     </div>
