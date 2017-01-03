@@ -1,4 +1,10 @@
-﻿.hidden {
+﻿html,body {
+    min-height: 100%;
+}
+body {
+  overflow-y:hidden;
+}
+.hidden {
     display: none !important;
 }
 .container-fluid {
@@ -7,4 +13,14 @@
 }
 form.form-inline > * {
     margin-right: 5px;
+}
+
+.time {
+    font-family: monospace;
+}
+footer {
+    position: fixed;
+    width: 100%;
+    bottom: 0px;
+    right: 0px;
 }

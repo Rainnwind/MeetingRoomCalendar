@@ -9,9 +9,7 @@
     <link href="~/ews.css" rel="stylesheet" />
 </head>
 <body>
-    <div class="container-fluid">
-        <h1 class="title text-center">@ViewData["Title"]</h1>
-    </div>
+    @RenderSection("header", false)
     @RenderBody()
     @RenderSection("footer", false)
     <script src="~/lib/jquery/dist/jquery.js"></script>

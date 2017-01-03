@@ -98,7 +98,7 @@ namespace MeetingRoomCalendar.Controllers
             return Ok(cal);
         }
 
-        private static Appointment GetAppointment(ExchangeService service, string id)
+        private Appointment GetAppointment(ExchangeService service, string id)
         {
             if (id == null)
             {
@@ -120,19 +120,19 @@ namespace MeetingRoomCalendar.Controllers
             }
         }
 
-        private static Model.Appointment ConvertAppointment(ExchangeService service, string id)
+        private Model.Appointment ConvertAppointment(ExchangeService service, string id)
         {
             return ConvertAppointment(GetAppointment(service, id));
         }
 
-        private static Model.Appointment ConvertAppointment(Appointment a)
+        private Model.Appointment ConvertAppointment(Appointment a)
         {
             if (a == null) return null;
             return new Model.Appointment()
             {
                 UniqueId = a.Id.UniqueId,
-                CanModify = a.EffectiveRights.HasFlag(EffectiveRights.Modify),
-                CanDelete = a.EffectiveRights.HasFlag(EffectiveRights.Delete),
+                CanModify = a.EffectiveRights.HasFlag(EffectiveRights.Modify) && (settings.ModifyEnabledCategories.Length == 0 || settings.ModifyEnabledCategories.Any(a.Categories.Contains)),
+                CanDelete = a.EffectiveRights.HasFlag(EffectiveRights.Delete) && (settings.DeleteEnabledCategories.Length == 0 || settings.DeleteEnabledCategories.Any(a.Categories.Contains)),
                 Start = a.Start,
                 End = a.End,
                 IsAllDayEvent = a.IsAllDayEvent,
@@ -146,7 +146,7 @@ namespace MeetingRoomCalendar.Controllers
             };
         }
 
-        private static Appointment ConvertAppointment(Model.Appointment appointment, ExchangeService service)
+        private Appointment ConvertAppointment(Model.Appointment appointment, ExchangeService service)
         {
             var a = new Appointment(service);
             a.Start = appointment.Start;
@@ -199,6 +199,10 @@ namespace MeetingRoomCalendar.Controllers
             {
                 return StatusCode(403, $"{System.Security.Principal.WindowsIdentity.GetCurrent().Name} has no create rights in the calendar of {email}");
             }
+            if (settings.CreateEnabledCategories.Any() && !settings.CreateEnabledCategories.Any(appointment.Categories.Contains))
+            {
+                return StatusCode(403, "Create denied on category");
+            }
             var a = ConvertAppointment(appointment, service);
             a.Save(folder.Id, SendInvitationsMode.SendToNone);
             return Ok(ConvertAppointment(service, a.Id.UniqueId));
@@ -236,6 +240,10 @@ namespace MeetingRoomCalendar.Controllers
             if (!deletedAppointment.EffectiveRights.HasFlag(EffectiveRights.Delete))
             {
                 return StatusCode(403, "Delete appointment denied");
+            }
+            if (settings.DeleteEnabledCategories.Length > 0 && !settings.DeleteEnabledCategories.Any(deletedAppointment.Categories.Contains))
+            {
+                return StatusCode(403, "Delete appointment denied on category");
             }
             var expectedParentFolder = Folder.Bind(
                 service,
