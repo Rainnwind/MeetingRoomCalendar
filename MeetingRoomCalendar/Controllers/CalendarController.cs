@@ -54,13 +54,14 @@ namespace MeetingRoomCalendar.Controllers
         [HttpGet("{mailName}")]
         public ActionResult Get(string mailName, DateTime? from, DateTime? to)
         {
+
             if (!from.HasValue)
             {
-                from = DateTime.Today;
+                from = DateTime.Now;
             }
             if (!to.HasValue)
             {
-                to = from.Value.AddDays(1);
+                to = from.Value.Date.AddDays(1);
             }
             if (from.Value > to.Value)
             {
