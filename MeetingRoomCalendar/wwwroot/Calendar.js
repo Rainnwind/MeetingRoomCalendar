@@ -6,8 +6,8 @@ setInterval(updateTimeEct, 500);
 
 function updateTimeEct() {
     $("#time").text(getTimeFormatted(new Date(), true));
-    var curMin = new Date().getMinutes()
-    if (latestUpdateMinute != curMin) {
+    var curMin = new Date().getMinutes();
+    if (latestUpdateMinute !== curMin) {
         updateForms();
         latestUpdateMinute = curMin;
     }
@@ -51,18 +51,23 @@ function displayCalendar() {
     if (calendar) {
         $("title").text(calendar.owner.name);
         $("h1.title").text(calendar.owner.name);
-        tbody = $("table#calendar > tbody").empty();
+        var tbody = $("table#calendar > tbody").empty();
         var from = new Date(calendar.from);
+        var fromDate = new Date(from);
+        fromDate.setHours(0);
+        fromDate.setMinutes(0);
+        fromDate.setSeconds(0);
+        fromDate.setMilliseconds(0);
         var to = new Date(calendar.to);
-        noAppointments = true;
+        var noAppointments = true;
         for (var i in calendar.appointments) {
             var a = calendar.appointments[i];
             var start = new Date(a.start);
             var end = new Date(a.end);
             if (start < to && from < end) {
                 noAppointments = false;
-                if (start < from) {
-                    start = from;
+                if (start < fromDate) {
+                    start = fromDate;
                 }
                 if (end >= to) {
                     end = to;
@@ -113,7 +118,7 @@ function loadCalendar() {
     $("#update_status").text("Opdaterer ...")
     $("#update_status").removeClass("alert-danger");
     $()
-    $.getJSON("/api/calendar/" + calendarMailbox).done(function (cal) {
+    $.getJSON("/api/calendar/" + window.calendarMailbox).done(function (cal) {
         calendar = cal;
         displayCalendar();
         $("#update_status").empty();
@@ -177,31 +182,46 @@ function createNewMeeting() {
     start.setMinutes(parseInt(start.getMinutes() / 15) * 15);
     start.setSeconds(0);
     start.setMilliseconds(0);
-    newAppointment = {
-        start: start,
-        end: new Date(start.getTime() + $("#new_meeting_duration").val() * 60000),
-        subject: "Ad-hoc møde",
-        isBusy: true,
-        isAllDayEvent: false,
-        organizer: calendar.owner,
-        categories: ["ADHOC"]
-    }
-    $.ajax({
-        method: "POST",
-        url: "/api/calendar/" + calendarMailbox + "/appointment",
-        data: JSON.stringify(newAppointment),
-        contentType: "application/json; charset=UTF-8"
-    }).done(function () {
-        loadCalendar();
-        $("#new_meeting_status").empty();
-        $("#new_meeting_status").removeClass("alert-danger");
-    }).fail(function (jqXHR) {
-        $("#new_meeting_status").text("Status " + jqXHR.status + " " + jqXHR.statusText);
-        if (jqXHR.responseText) {
-            $("#new_meeting_status").append($("<br/>")).append(jqXHR.responseText);
+    var end = new Date(start.getTime() + $("#new_meeting_duration").val() * 60000);
+    if (calendar) {
+        for (var i in calendar.appointments) {
+            var aStart = new Date(calendar.appointments[i].start);
+            var aEnd = new Date(calendar.appointments[i].end);
+            if (aStart < end || end < aEnd) {
+                end = aStart;
+            }
         }
+    }
+    if (end < start) {
+        $("#new_meeting_status").text("Der er ikke plads til et ad-hoc møde");
         $("#new_meeting_status").addClass("alert-danger");
-    });
+    } else {
+        var newAppointment = {
+            start: start,
+            end: end,
+            subject: "Ad-hoc møde",
+            isBusy: true,
+            isAllDayEvent: false,
+            organizer: calendar.owner,
+            categories: ["ADHOC"]
+        }
+        $.ajax({
+            method: "POST",
+            url: "/api/calendar/" + window.calendarMailbox + "/appointment",
+            data: JSON.stringify(newAppointment),
+            contentType: "application/json; charset=UTF-8"
+        }).done(function() {
+            loadCalendar();
+            $("#new_meeting_status").empty();
+            $("#new_meeting_status").removeClass("alert-danger");
+        }).fail(function(jqXHR) {
+            $("#new_meeting_status").text("Status " + jqXHR.status + " " + jqXHR.statusText);
+            if (jqXHR.responseText) {
+                $("#new_meeting_status").append($("<br/>")).append(jqXHR.responseText);
+            }
+            $("#new_meeting_status").addClass("alert-danger");
+        });
+    }
 }
 
 function deleteMeeting(uniqueId, buttonId) {
@@ -209,7 +229,7 @@ function deleteMeeting(uniqueId, buttonId) {
     button.attr("disabled", "disabled");
     $.ajax({
         method: "DELETE",
-        url: "/api/calendar/" + calendarMailbox + "/appointment",
+        url: "/api/calendar/" + window.calendarMailbox + "/appointment",
         data: JSON.stringify(uniqueId),
         dataType: "json",
         contentType: "application/json; charset=UTF-8"
