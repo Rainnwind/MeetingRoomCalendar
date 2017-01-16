@@ -185,10 +185,13 @@ function createNewMeeting() {
     var end = new Date(start.getTime() + $("#new_meeting_duration").val() * 60000);
     if (calendar) {
         for (var i in calendar.appointments) {
-            var aStart = new Date(calendar.appointments[i].start);
-            var aEnd = new Date(calendar.appointments[i].end);
-            if (aStart < end || end < aEnd) {
-                end = aStart;
+            if (!calendar.appointments[i].isAllDayEvent)
+            {
+                var aStart = new Date(calendar.appointments[i].start);
+                var aEnd = new Date(calendar.appointments[i].end);
+                if (aStart < end && end < aEnd) {
+                    end = aStart;
+                }
             }
         }
     }
