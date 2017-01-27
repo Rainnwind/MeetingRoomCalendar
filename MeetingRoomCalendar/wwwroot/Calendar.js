@@ -89,7 +89,7 @@ function displayCalendar() {
             }
         };
         if (noAppointments) {
-            tbody.append($("<tr><td colspan='5' class='text-center'>Ingen begivenheder</td></th>"));
+            tbody.append($("<tr><td colspan='5' class='text-center'>Ingen begivenheder i dag</td></th>"));
         }
     }
 }
