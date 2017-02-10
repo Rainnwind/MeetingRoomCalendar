@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 
 namespace MeetingRoomCalendar.Controllers
 {
@@ -129,7 +130,7 @@ namespace MeetingRoomCalendar.Controllers
         private Model.Appointment ConvertAppointment(Appointment a)
         {
             if (a == null) return null;
-            return new Model.Appointment()
+            var res = new Model.Appointment()
             {
                 UniqueId = a.Id.UniqueId,
                 CanModify = a.EffectiveRights.HasFlag(EffectiveRights.Modify) && (settings.ModifyEnabledCategories.Length == 0 || settings.ModifyEnabledCategories.Any(a.Categories.Contains)),
@@ -140,11 +141,34 @@ namespace MeetingRoomCalendar.Controllers
                 IsBusy = a.LegacyFreeBusyStatus == LegacyFreeBusyStatus.Busy,
                 Subject = a.Subject,
                 Body = a.Body,
-                Organizer = new Model.Mailbox() { EMail = a.Organizer.Address, Name = a.Organizer.Name },
-                RequiredAttendees = a.RequiredAttendees.Select(ra => new Model.Mailbox() { EMail = ra.Address, Name = ra.Name }).ToArray(),
-                OptionalAttendees = a.OptionalAttendees.Select(ra => new Model.Mailbox() { EMail = ra.Address, Name = ra.Name }).ToArray(),
+                Organizer = ConvertEMailAddressToMailbox(a.Organizer, a.Service),
+                RequiredAttendees = a.RequiredAttendees.Select(ra => ConvertEMailAddressToMailbox(ra, a.Service)).ToArray(),//ra => new Model.Mailbox() { EMail = ra.Address, Name = ra.Name }).ToArray(),
+                OptionalAttendees = a.OptionalAttendees.Select(oa => ConvertEMailAddressToMailbox(oa , a.Service)).ToArray(),//ra => new Model.Mailbox() { EMail = ra.Address, Name = ra.Name }).ToArray(),
                 Categories = a.Categories.ToArray()
             };
+            return res;
+        }
+
+        private Model.Mailbox ConvertEMailAddressToMailbox(EmailAddress m, ExchangeService service)
+        {
+            if (Regex.IsMatch(m.Name, @"^/O=[^/]*/OU=[^/]*"))
+            {
+                var alt = service.ResolveName(m.Address).FirstOrDefault()?.Mailbox;
+                if (alt != null)
+                {
+                    m = alt;
+                }
+            }
+            var res = new Model.Mailbox()
+            {
+                EMail = m.Address,
+                Name = m.Name
+            };
+            if (Regex.IsMatch(res.Name, @"^/O=[^/]*/OU=[^/]*"))
+            {
+                res.Name = Regex.Replace(res.EMail, "^([^@]+)@.*$", @"$1");
+            }
+            return res;
         }
 
         private Appointment ConvertAppointment(Model.Appointment appointment, ExchangeService service)
