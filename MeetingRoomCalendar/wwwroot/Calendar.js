@@ -53,7 +53,7 @@ function displayCalendar() {
         $("h1.title").text(calendar.owner.name);
         var tbody = $("table#calendar > tbody").empty();
         var from = new Date(calendar.from);
-        var fromDate = new Date(from);
+        var fromDate = new Date(from.getFullYear(), from.getMonth(), from.getDate());
         fromDate.setHours(0);
         fromDate.setMinutes(0);
         fromDate.setSeconds(0);
@@ -189,7 +189,7 @@ function createNewMeeting() {
             {
                 var aStart = new Date(calendar.appointments[i].start);
                 var aEnd = new Date(calendar.appointments[i].end);
-                if (aStart < end && end < aEnd) {
+                if (end > aStart && aEnd > start) {
                     end = aStart;
                 }
             }
