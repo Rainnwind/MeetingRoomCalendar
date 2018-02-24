@@ -1,4 +1,10 @@
-﻿html,body {
+﻿* {
+    font-size: 20px;
+}
+button.btn {
+    font-size: 20px;
+}
+html,body {
     min-height: 100%;
 }
 body {
@@ -23,4 +29,6 @@ footer {
     width: 100%;
     bottom: 0px;
     right: 0px;
+    opacity: 1;
+    background-color: rgba(255,255,255,1);
 }
