@@ -33,8 +33,8 @@
   - Identity: A domain user that has access to meeting room mailboxes, e.g. **dbbint\!adminmrc**
 - Add a site called **mrc** that uses the application pool **mrc** created above and that has the proper bindings, e.g. 
   - mrc.dbb.dk on *:80 (http)
-  - mrc.live.dbb.dk on *:80 (http)
-  - mrc.beta.dbb.dk on *:80 (http)
-  - mrc.ngt.dbb.dk on *:80 (http)
+  - http-mrc.live.dbb.dk on *:80 (http)
+  - http-mrc.beta.dbb.dk on *:80 (http)
+  - http-mrc.ngt.dbb.dk on *:80 (http)
 
 # Publish site in VS 2017
