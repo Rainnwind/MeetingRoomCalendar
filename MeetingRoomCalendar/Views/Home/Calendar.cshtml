@@ -17,8 +17,8 @@
 @section header {
     <div class="container-fluid">
         <div class="row">
-            <div class="col-8 text-left"><h1 class="title">@ViewData["Title"]</h1></div>
-            <div class="col-4 text-right"><p id="time" class="h1 time"></p></div>
+            <div class="col-xs-8 text-left"><h1 class="title">@ViewData["Title"]</h1></div>
+            <div class="col-xs-4 text-right"><p id="time" class="h1 time"></p></div>
         </div>
     </div>
 }
@@ -26,7 +26,7 @@
     <footer>
         <div class="container-fluid">
             <div class="row">
-                <div class="col-8 text-left">
+                <div class="col-xs-8 text-left">
                     <form id="new_meeting" class="form-inline hidden">
                         <label for="new_meeting_duration" class="sr-only">Varighed </label>
                         <select id="new_meeting_duration" class="form-control" disabled="disabled">
@@ -39,13 +39,13 @@
                         <span id="new_meeting_status"></span>
                     </form>
                 </div>
-                <div class="col-4 text-right">
+                <div class="col-xs-4 text-right">
                     <button id="reload_button" type="button" class="btn" onclick="loadCalendar()">Opdater</button>
                 </div>
             </div>
             <div class="row">
-                <div id="latest_update" class="col-6 text-left"></div>
-                <div id="update_status" class="col-6 text-right">Opdaterer ...</div>
+                <div id="latest_update" class="col-xs-8 text-left small"></div>
+                <div id="update_status" class="col-xs-4 text-right small">Opdaterer ...</div>
             </div>
         </div>
     </footer>
