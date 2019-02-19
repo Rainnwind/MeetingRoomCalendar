@@ -32,19 +32,25 @@ namespace MeetingRoomCalendar.Controllers
             }
             var service = new ExchangeService(ExchangeVersion.Exchange2013);
             service.UseDefaultCredentials = true;
-            try
-            {
-                service.AutodiscoverUrl(email);
+            if (String.IsNullOrEmpty(settings.EwsUrl)) {
+                try
+                {
+                    service.AutodiscoverUrl(email);
+                }
+                catch (Microsoft.Exchange.WebServices.Data.AutodiscoverLocalException e)
+                {
+                    errorResult = StatusCode(503, e.Message);
+                    return null;
+                }
+                catch (Microsoft.Exchange.WebServices.Autodiscover.AutodiscoverRemoteException e)
+                {
+                    errorResult = NotFound(e.Error.Message);
+                    return null;
+                }
             }
-            catch (Microsoft.Exchange.WebServices.Data.AutodiscoverLocalException e)
+            else
             {
-                errorResult = StatusCode(503, e.Message);
-                return null;
-            }
-            catch (Microsoft.Exchange.WebServices.Autodiscover.AutodiscoverRemoteException e)
-            {
-                errorResult = NotFound(e.Error.Message);
-                return null;
+                service.Url = new Uri(settings.EwsUrl); ;
             }
             errorResult = null;
             return service;
