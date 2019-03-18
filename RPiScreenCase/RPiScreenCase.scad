@@ -1,26 +1,27 @@
-//Version 5
+//Version 6
 th=1.6;                 //Thickness of case walls
 lth=0.2;                //Layer thickness
 w=192.96+2.5*th;        //Width of case (x dim)
 b=110.76+2.5*th;        //Breadth of case (y dim)
 h=50;                   //Height of case (z dim)
-r=7;                    //Radius of case corners
+r=7;                    //Radius of screen corners
 hd1=4;                  //Mount key hole diameter 1
 hd2=9;                  //Mount key hole diameter 2
 hdist=6;                //Mount key hole distance
 hw=2*r+2;               //Mount plate width
-seth=1;                 //Screen edge thickness 
-smth=8;                 //Screen thickness at mounts
-smdw=(w-126.2)/2;       //Screen mount hole offset in width direction
-smdb=(b-65.65)/2;       //Screen mount hole offset in breadth direction
+seth=0.8;               //Screen edge thickness 
+smth=8.5;               //Screen thickness at mounts
 smhd=3.5;               //Screen mount hole diameter
-smw=smdw+2*smhd;        //Screen mount width
-smoff=[0,1,0];          //Screen mount offset
-grille_width=th;        //Width of each ventilation grille
+smw=3*smhd;             //Screen mount plate width
+smdx=130.3;             //Distance between screen mount holes in x direction
+smdy=66.1;              //Distance between screen mount holes in y direction
+smoffx=5.8;             //Screen mount holes offset from center in x direction
+smoffy=1.0;             //Screen mount holes offset from center in y direction
+grille_width=1.5*th;    //Width of each ventilation grille
 grille_dist=6*th;       //Distance between ventilation grilles
 grille_count=12;        //Number of ventilation grilles
 print_case = true;      //Should the case be printed or not
-print_smplates = false; //Should the screen mount be printed or not
+print_smplates = true;  //Should the screen mount be printed or not
 
 $fn=25;
 //returns a vector of the center of the circle at each corner 
@@ -74,11 +75,10 @@ module rounded_square_triag_ring(width,breadth,radius,height,thickness) {
 }
 
 if (print_case) {
-
     //Main box
     difference() {
         //Rounded sides
-        rounded_box_sides(w,b,r,h,th);
+        rounded_box_sides(w,b,r+th,h,th);
         //Ventilation grille
         translate (v=[-0.5*grille_dist*(grille_count-1),th-b/2,0]) {
             rotate(a = 90,v=[1,0,0]) {
@@ -106,11 +106,11 @@ if (print_case) {
     difference() {
         linear_extrude(height=th) {
             difference() {
-                rounded_square(w,b,r);
-                square(size=[w-2*hw,b-4*th],center=true);
+                rounded_square(w,b,r+th);
+                square(size=[w-2*hw,b-8*th],center=true);
             }
         }
-        translate(v=[0,hdist/2,lth]) {
+        translate(v=[0,hdist/2,0]) {
             linear_extrude(height=th) {
                 for (cv = corner_vectors(w,b-hdist,r)) {
                     translate(v=cv) {
@@ -121,48 +121,31 @@ if (print_case) {
         }
     }
 
-    //Screen support rim
-    translate(v=[0,0,h-th/2-seth]) {
-        rounded_box_sides(w-2*th,b-2*th,r-th,th/2,th);
-    }
-    translate(v=[0,0,h-th-seth]) {
-        rounded_square_triag_ring(w-2*th,b-2*th,r-th,th/2,th);
-    }
-
     //Screen mount support rims
     translate(v=[0,0,h-smth]) {
-        difference() {
-            union() {
-                rounded_box_sides(w-2*th,b-2*th,r-th,smth-seth,th);
-                translate(v=[0,0,-2*th-2*lth]) {
-                    rounded_box_sides(w-2*th,b-2*th,r-th,th,th);
-                }
-                translate(v=[0,0,-3*th-2*lth]) {
-                    rounded_square_triag_ring(w-2*th,b-2*th,r-th,th,th);
-                }
-            }
-            cube(size=[w-2*smw,b,8*th],center=true);
+        rounded_box_sides(w-2*th,b-2*th,r,smth-seth,2*th);
+        translate(v=[0,0,-2*th]) {
+            rounded_square_triag_ring(w-2*th,b-2*th,r,2*th,2*th);
         }
     }
 }
 
 if (print_smplates) {
     //Screen mount plates
-    rotate(a=90) {
-        difference() {
-            linear_extrude(height=th, twist=0, center=false) {
-                union() {
-                    difference() {
-                        rounded_square(2*smw+th-2*lth,b-2*th-2*lth,r-th);
-                        square(size=[th,b],center=true);
-                    }
-                }
-            }
-            translate(v=[0,0,lth]+smoff) {
-                for (cv = corner_vectors(2*smw+th-2*smdw,b-2*smdb,0))
-                {
-                    translate(v=cv) {
-                        cylinder(d=smhd,h=th);
+    rotate(90) {
+        for (i=[-1,1]) {
+            translate([i*2*smhd,0,th/2]) {
+                difference() {
+                    cube([3*smhd,b-2*th,th], true);
+                    for (i=[-1,1]) {
+                        translate([0,i*smdy/2+smoffy,0]) {
+                            for (j=[-1,1]) {
+                                translate([0,j*smhd/2,0]) {
+                                    cylinder(d=smhd,h=th,center=true);
+                                }
+                            }
+                            cube([smhd,smhd,th],true);
+                        }
                     }
                 }
             }
