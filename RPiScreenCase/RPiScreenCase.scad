@@ -1,4 +1,4 @@
-//Version 7
+//Version 8
 th=1.6;                 //Thickness of case walls
 lth=0.2;                //Layer thickness
 w=192.96+2.5*th;        //Width of case (x dim)
@@ -84,7 +84,7 @@ if (print_case) {
             rounded_box_sides(w,b,r+th,h,th);
             for (i=[-1,1]) {
                 translate([i*(w-hw)/2,0,cable_hole_height/2+th]) {
-                    //Cable hole boxes
+                    //Cable hole boxes (left/right)
                     cube(size=[hw,cable_hole_width+2*th,cable_hole_height+2*th],center=true);
                     for (j=[-1,1]) {
                         translate([0,j*(b-1.5*hw)/2,-cable_hole_height/2-th]) {
@@ -92,10 +92,14 @@ if (print_case) {
                         }
                     }
                 }
+                translate([0,i*(b-4*th)/2,cable_hole_height/2+th]) {
+                    //Cable hole boxes (top/bottom)
+                    cube(size=[cable_hole_width+2*th,4*th,cable_hole_height+2*th],center=true);
+                }
             }
         }
         //Ventilation grille
-        translate (v=[-0.5*grille_dist*(grille_count-1),th-b/2,0]) {
+        translate (v=[-0.5*grille_dist*(grille_count-1),th-b/2,0.15*h]) {
             rotate(a = 90,v=[1,0,0]) {
                 for (i = [0:grille_count-1]) {
                     translate (v=[i*grille_dist,4*grille_width,-b]) {
@@ -119,6 +123,10 @@ if (print_case) {
         for (i=[-1,1]) {
             translate([i*(w-hw)/2,0,cable_hole_height/2+th]) {
                 cube(size=[hw-th,cable_hole_width,cable_hole_height], center=true);
+            }
+            translate([0,i*(b-4*th)/2,cable_hole_height/2+th]) {
+                //Cable hole boxes (top/bottom)
+                cube(size=[cable_hole_width,3*th,cable_hole_height],center=true);
             }
         }
     }
