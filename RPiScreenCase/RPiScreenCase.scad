@@ -1,3 +1,4 @@
+//Version 2
 th=1;                   //Thickness of case walls
 w=192.96+3*th;          //Width of case (x dim)
 b=110.76+3*th;          //Breadth of case (y dim)
@@ -87,26 +88,41 @@ linear_extrude(height=th) {
 //Screen support rim
 translate(v=[0,0,h-th-seth]) {
     rounded_box_sides(w,b,r,th,4*th);
+    
 }
 
-//Screen mounts
-translate(v=[0,0,h-th-smth]) {
-    linear_extrude(height=th, twist=0, center=false) {
-        union() {
-            difference() {
-                rounded_square(w-2*th,b-2*th,r-th);
-                translate(v=[smw,0,0]) {
-                    square(size=[w-2*smw,b]);
-                }
-                translate(v=[smdw,smdb,0]+smoff) {
-                    for (cv = corner_vectors(w-2*smdw,b-2*smdb,0))
-                    {
-                        translate(v=cv) {
-                            circle(d=smhd);
+//Screen mount grooves
+for (gh = [h-smth,h-smth-2*th]) {
+    translate(v=[0,0,gh]) {
+        difference() {
+            rounded_box_sides(w,b,r,th,2*th);
+            translate(v=[smw,0,0]) {
+                cube(size=[w-2*smw,b,th]);
+            }
+        }
+    }
+}
+
+//Screen mount plates
+translate(v=[(b+w)/2-th,(b-th)/2-smw,0]) {
+    rotate(a=90) {
+        linear_extrude(height=th, twist=0, center=false) {
+            union() {
+                difference() {
+                    rounded_square(2*smw+th,b-2*th,r-th);
+                    translate(v=[smw,0,0]) {
+                        square(size=[th,b]);
+                    }
+                    translate(v=[smdw,smdb,0]+smoff) {
+                        for (cv = corner_vectors(2*smw+th-2*smdw,b-2*smdb,0))
+                        {
+                            translate(v=cv) {
+                                circle(d=smhd);
+                            }
                         }
                     }
                 }
             }
-        }
-    }    
+        }    
+    }
 }
