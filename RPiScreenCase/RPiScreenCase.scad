@@ -1,27 +1,29 @@
-//Version 6
+//Version 7
 th=1.6;                 //Thickness of case walls
 lth=0.2;                //Layer thickness
 w=192.96+2.5*th;        //Width of case (x dim)
 b=110.76+2.5*th;        //Breadth of case (y dim)
-h=50;                   //Height of case (z dim)
+h=55;                   //Height of case (z dim)
 r=7;                    //Radius of screen corners
 hd1=4;                  //Mount key hole diameter 1
 hd2=9;                  //Mount key hole diameter 2
+hw=2*(r+th);            //Mount plate width
 hdist=6;                //Mount key hole distance
-hw=2*r+2;               //Mount plate width
 seth=0.8;               //Screen edge thickness 
 smth=8.5;               //Screen thickness at mounts
 smhd=3.5;               //Screen mount hole diameter
 smw=3*smhd;             //Screen mount plate width
-smdx=130.3;             //Distance between screen mount holes in x direction
-smdy=66.1;              //Distance between screen mount holes in y direction
-smoffx=5.8;             //Screen mount holes offset from center in x direction
-smoffy=1.0;             //Screen mount holes offset from center in y direction
+smdx=125.46;            //Distance between screen mount holes in x direction
+smdy=65.8;              //Distance between screen mount holes in y direction
+smoffx=1.05;            //Screen mount holes offset from center in x direction
+smoffy=0.5;             //Screen mount holes offset from center in y direction
 grille_width=1.5*th;    //Width of each ventilation grille
 grille_dist=6*th;       //Distance between ventilation grilles
 grille_count=12;        //Number of ventilation grilles
 print_case = true;      //Should the case be printed or not
 print_smplates = true;  //Should the screen mount be printed or not
+cable_hole_height = 10; //
+cable_hole_width=12;    //
 
 $fn=25;
 //returns a vector of the center of the circle at each corner 
@@ -78,7 +80,20 @@ if (print_case) {
     //Main box
     difference() {
         //Rounded sides
-        rounded_box_sides(w,b,r+th,h,th);
+        union() {
+            rounded_box_sides(w,b,r+th,h,th);
+            for (i=[-1,1]) {
+                translate([i*(w-hw)/2,0,cable_hole_height/2+th]) {
+                    //Cable hole boxes
+                    cube(size=[hw,cable_hole_width+2*th,cable_hole_height+2*th],center=true);
+                    for (j=[-1,1]) {
+                        translate([0,j*(b-1.5*hw)/2,-cable_hole_height/2-th]) {
+                            rounded_box_sides(hw,1.5*hw,r+th,h/2,th);
+                        }
+                    }
+                }
+            }
+        }
         //Ventilation grille
         translate (v=[-0.5*grille_dist*(grille_count-1),th-b/2,0]) {
             rotate(a = 90,v=[1,0,0]) {
@@ -100,6 +115,12 @@ if (print_case) {
                 }
             }
         }
+        //Cable holes
+        for (i=[-1,1]) {
+            translate([i*(w-hw)/2,0,cable_hole_height/2+th]) {
+                cube(size=[hw-th,cable_hole_width,cable_hole_height], center=true);
+            }
+        }
     }
 
     //Wall mount plates
@@ -112,7 +133,7 @@ if (print_case) {
         }
         translate(v=[0,hdist/2,0]) {
             linear_extrude(height=th) {
-                for (cv = corner_vectors(w,b-hdist,r)) {
+                for (cv = corner_vectors(w,b-hdist,r+th)) {
                     translate(v=cv) {
                         key_hole(hd1,hd2,hdist);
                     }
@@ -125,26 +146,34 @@ if (print_case) {
     translate(v=[0,0,h-smth]) {
         rounded_box_sides(w-2*th,b-2*th,r,smth-seth,2*th);
         translate(v=[0,0,-2*th]) {
-            rounded_square_triag_ring(w-2*th,b-2*th,r,2*th,2*th);
+            difference() {
+                rounded_square_triag_ring(w-2*th,b-2*th,r,2*th,2*th);
+                for (i=[-1,1]) {
+                    translate(v=[i*smdx*0.5+smoffx,0,th]) {
+                        cube([7*smhd,b-2*th,2*th], true);
+                    }
+                }
+            }
         }
     }
+    
 }
 
 if (print_smplates) {
     //Screen mount plates
     rotate(90) {
         for (i=[-1,1]) {
-            translate([i*2*smhd,0,th/2]) {
+            translate([i*4*smhd,0,th]) {
                 difference() {
-                    cube([3*smhd,b-2*th,th], true);
+                    cube([5*smhd,b-2*th,2*th], true);
                     for (i=[-1,1]) {
                         translate([0,i*smdy/2+smoffy,0]) {
                             for (j=[-1,1]) {
                                 translate([0,j*smhd/2,0]) {
-                                    cylinder(d=smhd,h=th,center=true);
+                                    cylinder(d=smhd,h=2*th,center=true);
                                 }
                             }
-                            cube([smhd,smhd,th],true);
+                            cube([smhd,smhd,2*th],true);
                         }
                     }
                 }
