@@ -85,7 +85,7 @@ namespace MeetingRoomCalendar.Controllers
                 service,
                 new FolderId(WellKnownFolderName.Calendar, new Mailbox(email)),
                 new PropertySet(BasePropertySet.FirstClassProperties));
-            var name = service.ResolveName(email).First().Mailbox.Name;
+            var name = settings.UseMailboxName ? service.ResolveName(email).First().Mailbox.Name : mailName;
             var cal = new Model.Calendar()
             {
                 UniqueId = folder.Id.UniqueId,
