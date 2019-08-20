@@ -5,17 +5,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@ViewData["Title"]</title>
-    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
     <link href="~/ews.css" rel="stylesheet" />
 </head>
 <body>
     @RenderSection("header", false)
     @RenderBody()
     @RenderSection("footer", false)
-    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery/jquery.js"></script>
     <script src="~/lib/jquery-ui/jquery-ui.js"></script>
-    <script src="~/lib/tether/dist/js/tether.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="~/lib/tether/js/tether.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.js"></script>
     @RenderSection("script", false)
 </body>
 </html>
