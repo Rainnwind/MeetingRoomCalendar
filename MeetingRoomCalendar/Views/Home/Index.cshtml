@@ -11,5 +11,5 @@
 
 <div class="container">
     @foreach (var mb in Model.MeetingRoomMailboxes)
-    { <a class="btn btn-primary btn-lg" href="calendar/@mb" role="button">@mb</a>}
+    { <a class="btn btn-primary btn-lg" href="calendar/@mb.Key" role="button">@mb.Value</a>}
 </div>
