@@ -25,7 +25,7 @@ namespace MeetingRoomCalendar.Controllers
         private ExchangeService GetService(string mailName, out string email, out ActionResult errorResult)
         {
             email = $"{mailName}@{settings.MailDomain}";
-            if (!settings.MeetingRoomMailboxes.Select(v => v.ToUpperInvariant()).Contains(mailName.ToUpperInvariant()))
+            if (!settings.MeetingRoomMailboxes.Keys.Select(v => v.ToUpperInvariant()).Contains(mailName.ToUpperInvariant()))
             {
                 errorResult = NotFound($"Mailbox {email} is not in MeetingRoomMailboxes");
                 return null;
@@ -74,9 +74,8 @@ namespace MeetingRoomCalendar.Controllers
             {
                 return BadRequest($"Invalid appointments period {from.Value:s}-{to.Value:s}");
             }
-            string email;
-            ActionResult errorResult;
-            var service = GetService(mailName, out email, out errorResult);
+
+            var service = GetService(mailName, out var email, out var errorResult);
             if (service == null)
             {
                 return errorResult;
@@ -85,7 +84,7 @@ namespace MeetingRoomCalendar.Controllers
                 service,
                 new FolderId(WellKnownFolderName.Calendar, new Mailbox(email)),
                 new PropertySet(BasePropertySet.FirstClassProperties));
-            var name = settings.UseMailboxName ? service.ResolveName(email).First().Mailbox.Name : mailName;
+            var name = settings.MeetingRoomMailboxes[mailName];
             var cal = new Model.Calendar()
             {
                 UniqueId = folder.Id.UniqueId,
